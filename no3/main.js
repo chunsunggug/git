@@ -117,10 +117,10 @@ var app = http.createServer(function (request, response) {
         qid,
         list,
         `
-      <form action="/create_process" method="post">
+      <form action="/create_process" enctype="multipart/form-data" method="post">
   <p><input type="text" name="title"
   placeholder="title"/></p>
-  <p><input type="file" name="file"
+  <p><input type="file" name="image"
   placeholder="file"/></p>
   <p>
     <textarea name="description" placeholder="description"></textarea>
@@ -130,6 +130,12 @@ var app = http.createServer(function (request, response) {
   </p>
 </form>
 
+    <form action="/create_process" enctype="multipart/form-data" method="post">
+    <div><label>작품 이름 : </label><input type="text" name="title"></div>
+    <div><label>작품 이미지 : </label><input type="file" name="image" value="작품 파일 선택"></div>
+    <input type="submit" value="upload">
+    </form>;
+
       `,
         ``
       );
@@ -137,6 +143,8 @@ var app = http.createServer(function (request, response) {
       response.end(template);
     });
   } else if (pathname === "/create_process") {
+    //addNewPaint(request, response);
+
     var body = "";
     request.on("data", function (data) {
       body += data;
@@ -146,6 +154,7 @@ var app = http.createServer(function (request, response) {
       var title = post.title;
       var file = post.file;
       var description = post.description;
+      var form = formidable.IncomingForm();
       console.log(title, file, description);
       fs.writeFile(`data/${title}`, description, "utf8", function (err) {
         response.writeHead(302, { Location: `/?id=${title}` });
@@ -220,4 +229,31 @@ var app = http.createServer(function (request, response) {
   }
 });
 
+function addNewPaint(req, res) {
+  var form = formidable.IncomingForm();
+  form.uploadDir = uploadDir;
+  form.parse(req, function (err, fields, files) {
+    var title = fields.title;
+    var image = files.image;
+    console.log(image);
+    var date = new Date();
+    var newImageName =
+      "image_" + date.getHours() + date.getMinutes() + date.getSeconds();
+    var ext = pathUtil.parse(image.name).ext;
+    var newPath = __dirname + "/image/" + newImageName + ext;
+    fs.renameSync(image.path, newPath);
+    var url = "image/" + newImageName + ext;
+
+    var info = {
+      title: title,
+      image: url,
+    };
+
+    paintList.push(info);
+
+    res.statusCode = 302;
+    res.setHeader("Location", ".");
+    res.end("Success");
+  });
+}
 app.listen(5000);

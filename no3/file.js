@@ -1,4 +1,7 @@
 var fs = require("fs");
+var express = require("express");
+var app = express();
+var static = require("serve-static");
 var pathUtil = require("path");
 
 // 업로드 된 파일 경로
@@ -40,7 +43,7 @@ function showList(res) {
   body += '<head><meta charset="UTF-8"></head>';
   body += "<body>";
   body += "<h3>Favorite Paint</h3>";
-
+  body += `<button onclick="location.href='index.html'">add</button>`;
   body += "<ul>";
   paintList.forEach(function (item, index) {
     body += "<li>";
@@ -62,6 +65,12 @@ function showList(res) {
 
   res.end(body);
 }
+app.get("/main", function (req, res) {
+  fs.readFile("index.html", function (err, data) {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(data);
+  });
+});
 
 server.listen(3000, function () {
   console.log("Server is running on 3000");
